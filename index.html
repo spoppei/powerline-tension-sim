@@ -3,158 +3,361 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Powerline Tension Simulator</title>
+  <title>Powerline Tension Model — PIERS0028</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f6f8fa;
+      --surface:  #ffffff;
+      --border:   #d0d7de;
+      --border2:  #e4e8ec;
+      --text:     #1f2328;
+      --muted:    #636c76;
+      --dim:      #9eaab4;
+      --green:    #1a7f37;
+      --green-bg: #dafbe1;
+      --green-bd: #aceebb;
+      --amber:    #7d4e00;
+      --amber-bg: #fff8c5;
+      --blue:     #0969da;
+    }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f3;
-      color: #2c2c2a;
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-      padding: 2rem 1rem;
     }
 
-    .container { max-width: 720px; margin: 0 auto; }
-
-    h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
-
-    .subtitle { font-size: 13px; color: #888780; margin-bottom: 2rem; }
-
-    .card {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 0.5px solid #d3d1c7;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .card-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: #888780;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 1rem;
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: 150px 1fr 80px 70px;
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1.5rem;
+      display: flex;
       align-items: center;
-      gap: 10px 12px;
+      justify-content: space-between;
     }
 
-    .ctrl-label { font-size: 14px; color: #5f5e5a; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+
+    .logo-mark {
+      width: 26px; height: 26px;
+      border: 1.5px solid var(--green);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .header-title { font-size: 13px; font-weight: 500; }
+    .header-sub   { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+
+    .header-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--green);
+      background: var(--green-bg);
+      border: 1px solid var(--green-bd);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    /* Layout */
+    .main {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      height: calc(100vh - 45px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+    }
+
+    .section-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .control { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0.6rem; }
+
+    .control-name { font-size: 12px; color: var(--muted); }
+
+    .control-value-row { display: flex; align-items: center; gap: 6px; }
 
     input[type="range"] {
-      width: 100%;
-      accent-color: #1D9E75;
+      flex: 1;
+      -webkit-appearance: none;
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
       cursor: pointer;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      background: var(--green);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+    input[type="range"]::-moz-range-thumb {
+      width: 12px; height: 12px;
+      background: var(--green);
+      border-radius: 50%; border: none; cursor: pointer;
     }
 
     input[type="number"] {
-      width: 100%;
-      padding: 4px 8px;
-      font-size: 13px;
-      font-family: inherit;
-      border: 0.5px solid #d3d1c7;
-      border-radius: 6px;
-      background: #f5f5f3;
-      color: #2c2c2a;
+      width: 66px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 3px 6px;
       text-align: right;
       -moz-appearance: textfield;
+      outline: none;
+      transition: border-color 0.15s;
     }
 
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="number"]:focus { border-color: var(--green); background: #fff; }
 
-    input[type="number"]:focus {
-      outline: none;
-      border-color: #1D9E75;
-      background: #ffffff;
+    .ctrl-unit { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--dim); width: 28px; }
+
+    /* Wire spec table */
+    .wire-info {
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      overflow: hidden;
     }
 
-    .ctrl-unit { font-size: 13px; color: #888780; }
+    .wire-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-bottom: 1px solid var(--border2);
+      background: var(--surface);
+    }
 
-    .results {
+    .wire-info-row:last-child { border-bottom: none; }
+    .wire-info-row:nth-child(even) { background: var(--bg); }
+    .wire-info-key { color: var(--muted); }
+    .wire-info-val { font-family: 'IBM Plex Mono', monospace; color: var(--text); }
+
+    /* Right panel */
+    .right-panel { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Metrics */
+    .metrics {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
     }
 
     .metric {
-      background: #f5f5f3;
-      border-radius: 8px;
-      padding: 12px 14px;
+      padding: 0.9rem 1.25rem;
+      border-right: 1px solid var(--border);
     }
 
-    .metric-label { font-size: 11px; color: #888780; margin-bottom: 6px; line-height: 1.4; }
+    .metric:last-child { border-right: none; }
 
-    .metric-value { font-size: 22px; font-weight: 500; color: #2c2c2a; }
+    .metric-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
 
-    .metric-unit { font-size: 12px; font-weight: 400; color: #888780; }
+    .metric-number {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--text);
+    }
 
-    canvas { width: 100%; display: block; border-radius: 8px; }
+    .metric-number.primary { color: var(--green); }
+    .metric-unit-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-    .note { font-size: 12px; color: #888780; margin-top: 1rem; line-height: 1.6; }
+    /* Diagram */
+    .diagram-area {
+      flex: 1;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-height: 0;
+    }
+
+    .diagram-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .diagram-title { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+
+    .formula-pill {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--amber);
+      background: var(--amber-bg);
+      border: 1px solid #e6c84a;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    canvas {
+      flex: 1;
+      width: 100%;
+      display: block;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      min-height: 0;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0.4rem 1.25rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--dim);
+      display: flex;
+      gap: 1.5rem;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
 
-    <h1>Powerline tension simulator</h1>
-    <p class="subtitle">Wire: 556.5-20/7 Type 16 ACSR/TW/GA2 Dove &nbsp;·&nbsp; NASA GPM / UConn PIERS0028</p>
-
-    <div class="card">
-      <div class="card-title">Inputs</div>
-      <div class="controls">
-
-        <span class="ctrl-label">Span</span>
-        <input type="range"  id="span-slider" min="20"  max="300" value="164"   step="1">
-        <input type="number" id="span-num"    min="20"  max="300" value="164"   step="1">
-        <span class="ctrl-unit">ft</span>
-
-        <span class="ctrl-label">Sag at midpoint</span>
-        <input type="range"  id="sag-slider"  min="0.2" max="20"  value="1"     step="0.1">
-        <input type="number" id="sag-num"     min="0.2" max="20"  value="1.0"   step="0.1">
-        <span class="ctrl-unit">ft</span>
-
-        <span class="ctrl-label">Wire weight</span>
-        <input type="range"  id="ww-slider"   min="0.5" max="1.5" value="0.833" step="0.001">
-        <input type="number" id="ww-num"      min="0.5" max="1.5" value="0.833" step="0.001">
-        <span class="ctrl-unit">lb/ft</span>
-
+  <header>
+    <div class="header-left">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <line x1="1" y1="6" x2="15" y2="6" stroke="#1a7f37" stroke-width="1" stroke-dasharray="2 2"/>
+          <path d="M1 6 Q8 11 15 6" stroke="#1a7f37" stroke-width="1.5" fill="none"/>
+          <circle cx="1"  cy="6" r="1.5" fill="#1a7f37"/>
+          <circle cx="15" cy="6" r="1.5" fill="#1a7f37"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">Powerline Tension Model</div>
+        <div class="header-sub">PIERS0028 · NASA GPM / UConn GAIL</div>
       </div>
     </div>
+    <div class="header-badge">v0.1 — static catenary</div>
+  </header>
 
-    <div class="results">
-      <div class="metric">
-        <div class="metric-label">Horizontal tension (H)</div>
-        <div class="metric-value"><span id="H-out">—</span> <span class="metric-unit">lbs</span></div>
+  <div class="main">
+
+    <div class="sidebar">
+
+      <div>
+        <div class="section-label">Parameters</div>
+
+        <div class="control">
+          <span class="control-name">Span length</span>
+          <div class="control-value-row">
+            <input type="range"  id="span-slider" min="20"  max="300"  value="164"   step="1">
+            <input type="number" id="span-num"    min="20"  max="300"  value="164"   step="1">
+            <span class="ctrl-unit">ft</span>
+          </div>
+        </div>
+
+        <div class="control">
+          <span class="control-name">Midspan sag</span>
+          <div class="control-value-row">
+            <input type="range"  id="sag-slider"  min="0.2" max="20"   value="1"     step="0.1">
+            <input type="number" id="sag-num"     min="0.2" max="20"   value="1.0"   step="0.1">
+            <span class="ctrl-unit">ft</span>
+          </div>
+        </div>
+
+        <div class="control">
+          <span class="control-name">Wire weight</span>
+          <div class="control-value-row">
+            <input type="range"  id="ww-slider"   min="0.5" max="1.5"  value="0.833" step="0.001">
+            <input type="number" id="ww-num"      min="0.5" max="1.5"  value="0.833" step="0.001">
+            <span class="ctrl-unit">lb/ft</span>
+          </div>
+        </div>
       </div>
-      <div class="metric">
-        <div class="metric-label">True tension at support</div>
-        <div class="metric-value"><span id="T-out">—</span> <span class="metric-unit">lbs</span></div>
+
+      <div>
+        <div class="section-label">Wire specification</div>
+        <div class="wire-info">
+          <div class="wire-info-row"><span class="wire-info-key">Type</span><span class="wire-info-val">ACSR/TW/GA2</span></div>
+          <div class="wire-info-row"><span class="wire-info-key">Name</span><span class="wire-info-val">Dove 556.5</span></div>
+          <div class="wire-info-row"><span class="wire-info-key">Stranding</span><span class="wire-info-val">20/7</span></div>
+          <div class="wire-info-row"><span class="wire-info-key">Bare OD</span><span class="wire-info-val">0.850 in</span></div>
+          <div class="wire-info-row"><span class="wire-info-key">Cover (LLDPE)</span><span class="wire-info-val">0.060 in</span></div>
+          <div class="wire-info-row"><span class="wire-info-key">Bare weight</span><span class="wire-info-val">0.764 lb/ft</span></div>
+          <div class="wire-info-row"><span class="wire-info-key">Rated strength</span><span class="wire-info-val">22,600 lbs</span></div>
+        </div>
       </div>
-      <div class="metric">
-        <div class="metric-label">Vertical component</div>
-        <div class="metric-value"><span id="V-out">—</span> <span class="metric-unit">lbs</span></div>
-      </div>
+
     </div>
 
-    <div class="card">
-      <div class="card-title">Wire diagram</div>
-      <canvas id="wire-canvas" height="200"></canvas>
+    <div class="right-panel">
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">True tension at support</div>
+          <div class="metric-number primary" id="T-out">—</div>
+          <div class="metric-unit-label">lbs</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Horizontal tension H</div>
+          <div class="metric-number" id="H-out">—</div>
+          <div class="metric-unit-label">lbs</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Vertical component</div>
+          <div class="metric-number" id="V-out">—</div>
+          <div class="metric-unit-label">lbs</div>
+        </div>
+      </div>
+
+      <div class="diagram-area">
+        <div class="diagram-header">
+          <span class="diagram-title">catenary profile</span>
+          <span class="formula-pill">T = √( H² + (wL/2)² )</span>
+        </div>
+        <canvas id="wire-canvas"></canvas>
+      </div>
+
+      <footer>
+        <span>H = wL² / 8d</span>
+        <span>w = 0.764 + 0.069 lb/ft (bare + LLDPE cover)</span>
+        <span>sag scale independent of span</span>
+      </footer>
+
     </div>
-
-    <p class="note">
-      Formula: H = (w × L²) / (8 × d) &nbsp;·&nbsp; T = √(H² + (wL/2)²)<br>
-      Wire weight includes bare conductor (0.764 lb/ft) + LLDPE cover (~0.069 lb/ft).
-      Sag and span are independent in the diagram — changing span does not affect sag depth on screen.
-    </p>
-
   </div>
 
   <script>
@@ -164,102 +367,119 @@
       { slider: 'ww-slider',   num: 'ww-num',   decimals: 3 },
     ];
 
-    const canvas = document.getElementById('wire-canvas');
-    const ctx    = canvas.getContext('2d');
-
-    // Keep slider and number input in sync
     fields.forEach(({ slider, num, decimals }) => {
       const s = document.getElementById(slider);
       const n = document.getElementById(num);
-
-      s.addEventListener('input', () => {
-        n.value = parseFloat(s.value).toFixed(decimals);
-        update();
-      });
-
+      s.addEventListener('input', () => { n.value = parseFloat(s.value).toFixed(decimals); update(); });
       n.addEventListener('input', () => {
         const val = parseFloat(n.value);
-        if (!isNaN(val)) {
-          s.value = Math.min(parseFloat(s.max), Math.max(parseFloat(s.min), val));
-          update();
-        }
+        if (!isNaN(val)) { s.value = Math.min(parseFloat(s.max), Math.max(parseFloat(s.min), val)); update(); }
       });
-
-      // Also fire update on blur in case user types and tabs away
       n.addEventListener('change', () => {
         const val = parseFloat(n.value);
         if (!isNaN(val)) {
           const clamped = Math.min(parseFloat(s.max), Math.max(parseFloat(s.min), val));
-          n.value = clamped.toFixed(decimals);
-          s.value = clamped;
-          update();
+          n.value = clamped.toFixed(decimals); s.value = clamped; update();
         }
       });
     });
 
+    const canvas = document.getElementById('wire-canvas');
+    const ctx    = canvas.getContext('2d');
+
     function draw(spanFt, sagFt) {
       const dpr  = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
-      canvas.width  = rect.width * dpr;
-      canvas.height = 200 * dpr;
+      canvas.width  = rect.width  * dpr;
+      canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
-      const W = rect.width;
-      ctx.clearRect(0, 0, W, 200);
+      const W = rect.width, H = rect.height;
+      ctx.clearRect(0, 0, W, H);
 
-      const pad     = 48;
-      const attachY = 40;
-      const poleH   = 100;
+      const pad     = 56;
+      const attachY = H * 0.22;
+      const poleBot = H * 0.78;
       const x0 = pad, x1 = W - pad;
       const midX = (x0 + x1) / 2;
 
-      const maxSagPx = 110;
-      const maxSagFt = 20;
-      const sagPx   = (sagFt / maxSagFt) * maxSagPx;
+      const sagPx  = (sagFt / 20) * (H * 0.44);
       const bottomY = attachY + sagPx;
 
+      // Ground
+      ctx.strokeStyle = '#e4e8ec';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, poleBot + 10); ctx.lineTo(W, poleBot + 10); ctx.stroke();
+
       // Poles
-      ctx.strokeStyle = '#5f5e5a';
-      ctx.lineWidth = 6;
+      const poleW = 6;
+      ctx.fillStyle = '#eaeef2';
+      ctx.fillRect(x0 - poleW/2, attachY, poleW, poleBot - attachY);
+      ctx.fillRect(x1 - poleW/2, attachY, poleW, poleBot - attachY);
+      ctx.strokeStyle = '#d0d7de';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x0 - poleW/2, attachY, poleW, poleBot - attachY);
+      ctx.strokeRect(x1 - poleW/2, attachY, poleW, poleBot - attachY);
+
+      // Crossarms
+      ctx.strokeStyle = '#d0d7de';
+      ctx.lineWidth = 2;
       ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(x0, attachY); ctx.lineTo(x0, attachY + poleH); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x1, attachY); ctx.lineTo(x1, attachY + poleH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x0 - 16, attachY + 6); ctx.lineTo(x0 + 16, attachY + 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1 - 16, attachY + 6); ctx.lineTo(x1 + 16, attachY + 6); ctx.stroke();
+
+      // Chord (dashed)
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = '#d0d7de';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0, attachY); ctx.lineTo(x1, attachY); ctx.stroke();
+      ctx.setLineDash([]);
 
       // Wire
-      ctx.strokeStyle = '#1D9E75';
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#1a7f37';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      for (let i = 0; i <= 120; i++) {
-        const t  = i / 120;
+      for (let i = 0; i <= 200; i++) {
+        const t  = i / 200;
         const px = x0 + t * (x1 - x0);
         const py = attachY + 4 * sagPx * t * (1 - t);
         i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
       }
       ctx.stroke();
 
-      // Chord (dashed)
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = '#d3d1c7';
+      // Sag indicator
+      ctx.strokeStyle = '#bf8700';
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(x0, attachY); ctx.lineTo(x1, attachY); ctx.stroke();
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(midX, attachY); ctx.lineTo(midX, bottomY); ctx.stroke();
       ctx.setLineDash([]);
 
-      // Sag indicator
-      ctx.strokeStyle = '#BA7517';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(midX, attachY); ctx.lineTo(midX, bottomY); ctx.stroke();
+      // Arrow tips
+      const a = 4;
+      ctx.fillStyle = '#bf8700';
+      ctx.beginPath(); ctx.moveTo(midX, attachY + 1); ctx.lineTo(midX - a, attachY + a + 1); ctx.lineTo(midX + a, attachY + a + 1); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(midX, bottomY - 1); ctx.lineTo(midX - a, bottomY - a - 1); ctx.lineTo(midX + a, bottomY - a - 1); ctx.closePath(); ctx.fill();
 
-      ctx.fillStyle = '#BA7517';
-      ctx.font = '12px -apple-system, sans-serif';
+      // Labels
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#bf8700';
       ctx.textAlign = 'left';
-      ctx.fillText('sag: ' + sagFt.toFixed(1) + ' ft', midX + 8, (attachY + bottomY) / 2 + 4);
+      ctx.fillText(sagFt.toFixed(1) + ' ft', midX + 8, (attachY + bottomY) / 2 + 4);
 
-      ctx.fillStyle = '#888780';
+      ctx.fillStyle = '#636c76';
       ctx.textAlign = 'center';
-      ctx.fillText('span: ' + spanFt + ' ft', midX, attachY + poleH + 18);
+      ctx.fillText(spanFt + ' ft', midX, poleBot + 24);
 
-      ctx.fillStyle = '#5f5e5a';
-      ctx.fillRect(x0 - 3, attachY - 3, 6, 6);
-      ctx.fillRect(x1 - 3, attachY - 3, 6, 6);
+      // Span dimension line
+      ctx.strokeStyle = '#d0d7de';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0, poleBot + 4); ctx.lineTo(x1, poleBot + 4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x0, poleBot + 1); ctx.lineTo(x0, poleBot + 7); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1, poleBot + 1); ctx.lineTo(x1, poleBot + 7); ctx.stroke();
+
+      // Insulator dots
+      ctx.fillStyle = '#0969da';
+      ctx.beginPath(); ctx.arc(x0, attachY, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x1, attachY, 3.5, 0, Math.PI * 2); ctx.fill();
     }
 
     function update() {
@@ -267,24 +487,20 @@
       const d = parseFloat(document.getElementById('sag-slider').value);
       const w = parseFloat(document.getElementById('ww-slider').value);
 
-      const H = (w * L * L) / (8 * d);
-      const V = w * L / 2;
-      const T = Math.sqrt(H * H + V * V);
+      const Hv = (w * L * L) / (8 * d);
+      const Vv = w * L / 2;
+      const Tv = Math.sqrt(Hv * Hv + Vv * Vv);
 
-      document.getElementById('H-out').textContent = Math.round(H).toLocaleString();
-      document.getElementById('V-out').textContent = Math.round(V).toLocaleString();
-      document.getElementById('T-out').textContent = Math.round(T).toLocaleString();
+      document.getElementById('H-out').textContent = Math.round(Hv).toLocaleString();
+      document.getElementById('V-out').textContent = Math.round(Vv).toLocaleString();
+      document.getElementById('T-out').textContent = Math.round(Tv).toLocaleString();
 
       draw(L, d);
     }
 
-    window.addEventListener('resize', () => {
-      const L = parseFloat(document.getElementById('span-slider').value);
-      const d = parseFloat(document.getElementById('sag-slider').value);
-      draw(L, d);
-    });
-
+    window.addEventListener('resize', update);
     update();
   </script>
+
 </body>
 </html>
